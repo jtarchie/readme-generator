@@ -1,91 +1,84 @@
-# Go README Generator
+# README Generator
 
-The Go README Generator is a command-line tool designed to automate the
-generation of high-quality README files for Go projects. It analyzes the
-contents of various files in your project and uses natural language processing
-to generate a comprehensive and informative README.
-
-## Intention of the Codebase
-
-The intention of the Go README Generator is to simplify the process of creating
-README files for Go projects. It eliminates the need for manual writing and
-editing by leveraging AI-powered language models to generate consistent and
-accurate documentation.
+The README Generator is a tool that allows you to generate README files for your
+code repositories. It aims to provide a starting place for creating informative
+and well-structured READMEs. With the ability to specify a glob pattern, the
+tool is designed to work with any code that is understandable by ChatGPT, making
+it flexible and adaptable.
 
 ## Features
 
-- Automated generation of README files for Go projects
-- Uses natural language processing to ensure active voice and eliminate
-  duplication
-- Approachable and easy to understand for all software engineers
-- Customizable output format and style
-- Integrates with popular Go libraries and frameworks
+- Automated README generation: The tool automates the process of generating
+  README files, saving you time and effort.
+- Glob pattern support: You can specify a glob pattern to select the files you
+  want to include in the README, ensuring that only relevant information is
+  included.
+- Active voice and removal of duplication: The generated READMEs are written in
+  active voice and avoid unnecessary duplication, making them more concise and
+  readable.
+- Approachable to all software engineers: The READMEs are written in a way that
+  is easily understandable by software engineers of all levels of experience.
 
 ## Installation
 
-To install the Go README Generator, follow these steps:
+To install the README Generator, follow these steps:
 
-1. Ensure that you have Go version 1.21.1 or later installed on your system.
-2. Open your terminal and run the following command:
-
-```shell
-go get -u github.com/jtarchie/readme-generator
-```
-
-3. Once the installation is complete, you can start using the Go README
-   Generator in your projects.
+1. Ensure you have Go version 1.21.1 or later installed on your system.
+2. Clone the repository:
+   ```shell
+   git clone https://github.com/jtarchie/readme-generator.git
+   ```
+3. Change into the project directory:
+   ```shell
+   cd readme-generator
+   ```
+4. Build the project:
+   ```shell
+   go build -o readme-generator
+   ```
+5. Optionally, add the binary to your system's PATH for easier access:
+   ```shell
+   export PATH=$PATH:/path/to/readme-generator
+   ```
 
 ## Usage
 
-To generate a README file for your Go project using the Go README Generator,
-execute the following command:
+To use the README Generator, run the following command:
 
 ```shell
-readme-generator --glob=<glob pattern> --filename=<output filename> --openai-access-token=<OpenAI API token>
+readme-generator --glob=<glob pattern> --filename=<output filename> --openai-access-token=<OpenAI API token> --base-url=<OpenAI base URL> --prompt=<additional prompt information>
 ```
 
-Replace `<glob pattern>` with the pattern that matches the files you want to
-include in the README generation process. Replace `<output filename>` with the
-desired name of the generated README file. Finally, replace `<OpenAI API token>`
-with your access token for the OpenAI API.
+Replace the placeholders with the appropriate values:
+
+- `<glob pattern>`: The glob pattern specifying the files to read to help
+  determine the README content.
+- `<output filename>`: The name of the file to output the generated README.
+- `<OpenAI API token>`: The API token for the OpenAI API. Make sure to obtain a
+  valid token before running the tool.
+- `<OpenAI base URL>` (optional): The URL of the OpenAI HTTP domain. If not
+  provided, the default value `https://api.openai.com/v1` will be used.
+- `<additional prompt information>`: Additional information to provide as a
+  prompt when generating the README.
 
 ## Evaluation
 
-To evaluate the Go README Generator and its suitability for your project,
-consider the following:
+To evaluate the project, consider the following aspects:
 
-- The generated README files are written in active voice, which enhances
-  readability and clarity.
-- The elimination of duplication ensures that the generated documentation is
-  concise and focused.
-- The README is designed to be approachable for all software engineers,
-  regardless of their experience level.
-- The Go README Generator integrates with popular Go libraries and frameworks,
-  making it flexible and adaptable to different project requirements.
+- Ease of use: Assess how easy it is to set up and use the README Generator.
+- Generated README quality: Examine the quality and clarity of the READMEs
+  produced by the tool.
+- Flexibility: Test the tool's ability to handle different code repositories by
+  providing various glob patterns.
+- Performance: Evaluate the speed and efficiency of the README generation
+  process.
 
-Give the Go README Generator a try and experience how it simplifies the process
-of creating README files for your Go projects!
+If you encounter any issues or have suggestions for improvement, please feel
+free to contribute by making the necessary changes and submitting a pull
+request.
 
-## License
+---
 
-The Go README Generator is open-source software licensed under the
-[MIT License](https://opensource.org/licenses/MIT). You are free to use, modify,
-and distribute the software in accordance with the terms of the license.
-
-## Contributors
-
-The Go README Generator is maintained and developed by:
-
-- [John Doe](https://github.com/johndoe)
-- [Jane Smith](https://github.com/janesmith)
-- [Alex Johnson](https://github.com/alexjohnson)
-
-If you would like to contribute to the project, please feel free to submit pull
-requests or open issues on our
-[GitHub repository](https://github.com/jtarchie/readme-generator).
-
-Thank you for using the Go README Generator! We hope it simplifies your README
-creation process and improves your project's documentation. Should you have any
-questions or need further assistance, please don't hesitate to reach out to us.
-
-Happy coding!
+This README was generated by the README Generator tool. We believe that
+leveraging automation to create READMEs is a valuable and efficient approach. If
+you have any questions or need further assistance, don't hesitate to reach out.

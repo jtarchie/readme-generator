@@ -17,6 +17,7 @@ type CLI struct {
 	Filename          string `required:"" default:"README.md" help:"name of the file to output the generated readme"`
 	OpenAIAccessToken string `help:"the API token for the OpenAI API" required:"" env:"OPENAI_ACCESS_TOKEN"`
 	BaseURL           string `help:"url of the OpenAI HTTP domain" default:"https://api.openai.com/v1"`
+	Prompt            string `required:"" help:"additional prompt information when generating the README"`
 }
 
 func main() {
@@ -72,7 +73,7 @@ func (c *CLI) Run() error {
 
 	messages = append(messages, openai.ChatCompletionMessage{
 		Role: openai.ChatMessageRoleUser,
-		Content: heredoc.Doc(`
+		Content: heredoc.Doc(fmt.Sprintf(`
 			Given all the files above, please write a README file for this code.
 			Ensure that the copy is in active voice, removes any duplication, and
 			is approachable to all software engineers.
@@ -82,8 +83,14 @@ func (c *CLI) Run() error {
 			- A brief the description of the intention of the codebase.
 			- A list short list of high level feature set.
 			- Usage example of how to install the library and use it in code.
-			- Anything else that would be useful for someone to evaluate the project.
-		`),
+			- Anything else that would be useful for someone to evaluate the project. If
+			  it requires additional changes from the author insert text that "FIXME" with
+				a description that they should do.
+
+			The following is additional prompting by the author:
+
+			%s
+		`, c.Prompt)),
 	})
 
 	config := openai.DefaultConfig(c.OpenAIAccessToken)
@@ -101,7 +108,7 @@ func (c *CLI) Run() error {
 	}
 
 	readme := response.Choices[0].Message.Content
-	
+
 	err = os.WriteFile(c.Filename, []byte(readme), os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("could not write file %q: %w", c.Filename, err)
