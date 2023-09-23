@@ -91,7 +91,7 @@ func (c *CLI) Run() error {
 			- A brief the description of the intention of the codebase.
 			- A list short list of high level feature set.
 			- Usage example of how to install the library and use it in code.
-			- Anything else that would be useful for someone to evaluate the project. If
+			- Any other sections that would be useful to a README. If
 			  it requires additional changes from the author insert text that "FIXME" with
 				a description that they should do.
 
