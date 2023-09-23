@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc/v2"
@@ -31,7 +32,12 @@ func main() {
 func (c *CLI) Run() error {
 	basepath, pattern := doublestar.SplitPattern(c.Glob)
 
-	matches, err := doublestar.Glob(os.DirFS(basepath), pattern)
+	absPath, err := filepath.Abs(basepath)
+	if err != nil {
+		return fmt.Errorf("could not resolve absolute path: %w", err)
+	}
+
+	matches, err := doublestar.Glob(os.DirFS(absPath), pattern)
 	if err != nil {
 		return fmt.Errorf("could not matches for %q: %w", c.Glob, err)
 	}
@@ -52,9 +58,11 @@ func (c *CLI) Run() error {
 	}
 
 	for _, match := range matches {
-		fmt.Printf("filename: %s\n", match)
+		filename := filepath.Join(absPath, match)
 
-		contents, err := os.ReadFile(match)
+		fmt.Printf("filename: %s\n", filename)
+
+		contents, err := os.ReadFile(filename)
 		if err != nil {
 			return fmt.Errorf("could not read file: %w", err)
 		}
