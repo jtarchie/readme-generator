@@ -19,6 +19,7 @@ type CLI struct {
 	OpenAIAccessToken string `help:"the API token for the OpenAI API" required:"" env:"OPENAI_ACCESS_TOKEN"`
 	BaseURL           string `help:"url of the OpenAI HTTP domain" default:"https://api.openai.com/v1"`
 	Prompt            string `required:"" help:"additional prompt information when generating the README"`
+	Model             string `required:"" default:"gpt-3.5-turbo" help:"the model to use for the OpenAI API" enum:"gpt-3.5-turbo,gpt-4"`
 }
 
 func main() {
@@ -108,7 +109,7 @@ func (c *CLI) Run() error {
 	response, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model:    openai.GPT3Dot5Turbo,
+			Model:    c.Model,
 			Messages: messages,
 		})
 	if err != nil {
