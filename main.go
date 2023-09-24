@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,15 +15,17 @@ import (
 )
 
 type CLI struct {
-	Glob              string `required:"" help:"glob pattern of files to read to help determine the README content"`
-	Filename          string `required:"" default:"README.md" help:"name of the file to output the generated readme"`
-	OpenAIAccessToken string `help:"the API token for the OpenAI API" required:"" env:"OPENAI_ACCESS_TOKEN"`
-	BaseURL           string `help:"url of the OpenAI HTTP domain" default:"https://api.openai.com/v1"`
-	Prompt            string `required:"" help:"additional prompt information when generating the README"`
-	Model             string `required:"" default:"gpt-3.5-turbo" help:"the model to use for the OpenAI API" enum:"gpt-3.5-turbo,gpt-4"`
+	Glob              string `help:"glob pattern of files to read to help determine the README content" required:""`
+	Filename          string `default:"README.md"                                                       help:"name of the file to output the generated readme" required:""`
+	OpenAIAccessToken string `env:"OPENAI_ACCESS_TOKEN"                                                 help:"the API token for the OpenAI API"                required:""`
+	BaseURL           string `default:"https://api.openai.com/v1"                                       help:"url of the OpenAI HTTP domain"`
+	Prompt            string `help:"additional prompt information when generating the README"           required:""`
+	Model             string `default:"gpt-3.5-turbo"                                                   enum:"gpt-3.5-turbo,gpt-4"                             help:"the model to use for the OpenAI API" required:""`
 }
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)))
+
 	cli := CLI{}
 	ctx := kong.Parse(&cli)
 	// Call the Run() method of the selected parsed command.
@@ -45,28 +48,22 @@ func (c *CLI) Run() error {
 
 	messages := []openai.ChatCompletionMessage{
 		{
-			Role: openai.ChatMessageRoleAssistant,
-			Content: heredoc.Doc(`
-				Over the next few prompts from the user, you will receive the contents of several files.
-				Please take the input of all the files without returning any prose, just confirm receipt and waiting for the next file or prompt.
-				The format of the file with be two headers:
-				- filename: this contains the name of the file
-				- contents: the first bunch of content from the file
-
-				When the user finally provides a prompt, which is not file, please do you best to follow that prompt.
-			`),
+			Role:    openai.ChatMessageRoleAssistant,
+			Content: heredoc.Doc(setupAssistant),
 		},
 	}
 
 	for _, match := range matches {
 		filename := filepath.Join(absPath, match)
 
-		fmt.Printf("filename: %s\n", filename)
+		slog.Info("processing file", slog.String("filename", filename))
 
 		contents, err := os.ReadFile(filename)
 		if err != nil {
 			return fmt.Errorf("could not read file: %w", err)
 		}
+
+		maxTokens := 4000
 
 		messages = append(messages, openai.ChatCompletionMessage{
 			Role: openai.ChatMessageRoleUser,
@@ -75,36 +72,30 @@ func (c *CLI) Run() error {
 				contents: %s
 			`,
 				strings.Replace(match, basepath, "", 1),
-				string(contents)[0:min(4000, len(contents))],
+				string(contents)[0:min(maxTokens, len(contents))],
 			)),
 		})
 	}
 
 	messages = append(messages, openai.ChatCompletionMessage{
-		Role: openai.ChatMessageRoleUser,
-		Content: heredoc.Doc(fmt.Sprintf(`
-			Given all the files above, please write a README file for this code.
-			Ensure that the copy is in active voice, removes any duplication, and
-			is approachable to all software engineers.
-
-			It must include the following:
-			- Name of the project
-			- A brief the description of the intention of the codebase.
-			- A list short list of high level feature set.
-			- Usage example of how to install the library
-				- if it is a CLI, show an example invocation with description all the parameters
-				- if it library to be invoked in code, please give an example of how to use it. If
-				  there multiple functions give three of the most obvious starting points
-			- Any other sections that would be useful to a README. If
-			  it requires additional changes from the author insert text that "FIXME" with
-				a description that they should do.
-
-			The following is additional prompting by the author:
-
-			%s
-		`, c.Prompt)),
+		Role:    openai.ChatMessageRoleUser,
+		Content: heredoc.Doc(fmt.Sprintf(readmePrompt, c.Prompt)),
 	})
 
+	readme, err := c.runPrompt(messages)
+	if err != nil {
+		return fmt.Errorf("could not process OpenAI: %w", err)
+	}
+
+	err = os.WriteFile(c.Filename, []byte(readme), os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("could not write file %q: %w", c.Filename, err)
+	}
+
+	return nil
+}
+
+func (c *CLI) runPrompt(messages []openai.ChatCompletionMessage) (string, error) {
 	config := openai.DefaultConfig(c.OpenAIAccessToken)
 	config.BaseURL = c.BaseURL
 	client := openai.NewClientWithConfig(config)
@@ -116,15 +107,10 @@ func (c *CLI) Run() error {
 			Messages: messages,
 		})
 	if err != nil {
-		return fmt.Errorf("could not translate: %w", err)
+		return "", fmt.Errorf("could not translate: %w", err)
 	}
 
 	readme := response.Choices[0].Message.Content
 
-	err = os.WriteFile(c.Filename, []byte(readme), os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("could not write file %q: %w", c.Filename, err)
-	}
-
-	return nil
+	return readme, nil
 }
