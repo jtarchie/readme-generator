@@ -22,24 +22,31 @@ it flexible and adaptable.
 ## Installation
 
 To install the README Generator, follow these steps:
+### Homebrew
+  
+  ```bash
+  brew tap jtarchie/readme-generator https://github.com/jtarchie/readme-generator
+  brew install readme-generator
+  ```
 
-1. Ensure you have Go version 1.21.1 or later installed on your system.
-2. Clone the repository:
-   ```shell
-   git clone https://github.com/jtarchie/readme-generator.git
-   ```
-3. Change into the project directory:
-   ```shell
-   cd readme-generator
-   ```
-4. Build the project:
-   ```shell
-   go build -o readme-generator
-   ```
-5. Optionally, add the binary to your system's PATH for easier access:
-   ```shell
-   export PATH=$PATH:/path/to/readme-generator
-   ```
+### Go
+  1. Ensure you have Go version 1.21.1 or later installed on your system.
+  2. Clone the repository:
+     ```shell
+     git clone https://github.com/jtarchie/readme-generator.git
+     ```
+  3. Change into the project directory:
+     ```shell
+     cd readme-generator
+     ```
+  4. Build the project:
+     ```shell
+     go build -o readme-generator
+     ```
+  5. Optionally, add the binary to your system's PATH for easier access:
+     ```shell
+     export PATH=$PATH:/path/to/readme-generator
+     ```
 
 ## Usage
 
