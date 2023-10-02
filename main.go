@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc/v2"
@@ -14,12 +15,14 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
+const maxTokens = 4000
+
 type CLI struct {
 	Glob              string `help:"glob pattern of files to read to help determine the README content" required:""`
 	Filename          string `default:"README.md"                                                       help:"name of the file to output the generated readme" required:""`
 	OpenAIAccessToken string `env:"OPENAI_ACCESS_TOKEN"                                                 help:"the API token for the OpenAI API"                required:""`
 	BaseURL           string `default:"https://api.openai.com/v1"                                       help:"url of the OpenAI HTTP domain"`
-	Prompt            string `help:"additional prompt information when generating the README"           required:""`
+	Context           string `help:"additional context information when generating the README"          required:""`
 	Model             string `default:"gpt-3.5-turbo"                                                   enum:"gpt-3.5-turbo,gpt-4"                             help:"the model to use for the OpenAI API" required:""`
 }
 
@@ -46,12 +49,7 @@ func (c *CLI) Run() error {
 		return fmt.Errorf("could not matches for %q: %w", c.Glob, err)
 	}
 
-	messages := []openai.ChatCompletionMessage{
-		{
-			Role:    openai.ChatMessageRoleAssistant,
-			Content: heredoc.Doc(setupAssistant),
-		},
-	}
+	summaries := []string{}
 
 	for _, match := range matches {
 		filename := filepath.Join(absPath, match)
@@ -63,28 +61,54 @@ func (c *CLI) Run() error {
 			return fmt.Errorf("could not read file: %w", err)
 		}
 
-		maxTokens := 4000
-
-		messages = append(messages, openai.ChatCompletionMessage{
-			Role: openai.ChatMessageRoleUser,
-			Content: strings.TrimSpace(fmt.Sprintf(`
+		messages := []openai.ChatCompletionMessage{
+			{
+				Role:    openai.ChatMessageRoleSystem,
+				Content: heredoc.Doc(setupAssistant),
+			},
+			{
+				Role: openai.ChatMessageRoleUser,
+				Content: strings.TrimSpace(fmt.Sprintf(`
 				filename: %s
 				contents: %s
 			`,
-				strings.Replace(match, basepath, "", 1),
-				string(contents)[0:min(maxTokens, len(contents))],
-			)),
-		})
+					strings.Replace(match, basepath, "", 1),
+					string(contents)[0:min(maxTokens, len(contents))],
+				)),
+			},
+		}
+
+		summary, err := c.runPrompt(messages)
+		if err != nil {
+			return fmt.Errorf("could not process OpenAI for file %q: %w", match, err)
+		}
+
+		summaries = append(summaries, summary)
 	}
 
-	messages = append(messages, openai.ChatCompletionMessage{
-		Role:    openai.ChatMessageRoleUser,
-		Content: heredoc.Doc(fmt.Sprintf(readmePrompt, c.Prompt)),
+	sort.Slice(summaries, func(i, j int) bool {
+		return len(summaries[i]) > len(summaries[j])
 	})
+
+	fullSummary := strings.Join(summaries, "\n---\n")
+	messages := []openai.ChatCompletionMessage{
+		{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: heredoc.Doc(fmt.Sprintf(readmePrompt, c.Context)),
+		},
+		{
+			Role:    openai.ChatMessageRoleUser,
+			Content: fullSummary[0:min(len(fullSummary), maxTokens)],
+		},
+	}
+
+	slog.Info("processing readme",
+		slog.Int("files", len(summaries)),
+	)
 
 	readme, err := c.runPrompt(messages)
 	if err != nil {
-		return fmt.Errorf("could not process OpenAI: %w", err)
+		return fmt.Errorf("could not process OpenAI for summary: %w", err)
 	}
 
 	err = os.WriteFile(c.Filename, []byte(readme), os.ModePerm)
@@ -110,7 +134,5 @@ func (c *CLI) runPrompt(messages []openai.ChatCompletionMessage) (string, error)
 		return "", fmt.Errorf("could not translate: %w", err)
 	}
 
-	readme := response.Choices[0].Message.Content
-
-	return readme, nil
+	return response.Choices[0].Message.Content, nil
 }

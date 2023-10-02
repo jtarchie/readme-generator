@@ -8,6 +8,7 @@ linters:
   - paralleltest
   - gomoddirectives
   - lll
+  - funlen
 
   # linters deprecated
   - deadcode

@@ -59,7 +59,7 @@ var _ = Describe("CLI", func() {
 					Filename:          readmeFile.Name(),
 					OpenAIAccessToken: "some token",
 					BaseURL:           server.URL(), // Use the mock server URL
-					Prompt:            "some prompt",
+					Context:           "some prompt",
 					Model:             "gpt-3.5-turbo",
 				}
 				err := cli.Run()
@@ -86,7 +86,7 @@ var _ = Describe("CLI", func() {
 					Filename:          readmeFile.Name(),
 					OpenAIAccessToken: "some token",
 					BaseURL:           server.URL(), // Use the mock server URL
-					Prompt:            "some prompt",
+					Context:           "some prompt",
 					Model:             "gpt-3.5-turbo",
 				}
 				err := cli.Run()
@@ -129,7 +129,7 @@ var _ = Describe("CLI", func() {
 				Filename:          readmeFile.Name(),
 				OpenAIAccessToken: "some token",
 				BaseURL:           server.URL(), // Use the mock server URL
-				Prompt:            "some prompt",
+				Context:           "some prompt",
 				Model:             "gpt-3.5-turbo",
 			}
 			err := cli.Run()
@@ -167,7 +167,7 @@ var _ = Describe("CLI", func() {
 				Filename:          readmeFile.Name(),
 				OpenAIAccessToken: "some token",
 				BaseURL:           server.URL(), // Use the mock server URL
-				Prompt:            "some prompt",
+				Context:           "some prompt",
 				Model:             "gpt-4",
 			}
 			err := cli.Run()
